@@ -7,26 +7,50 @@ from scipy.stats import find_repeats
 import warnings
 
 
-Ttest_indResult = namedtuple('Ttest_indResult',
-                             ('statistic', 'pvalue', 'dof',
-                              'mean1', 'mean2', 'var1', 'var2',
-                              'tail',
-                              'cohen_d'))
+Ttest_indResult = namedtuple(
+    "Ttest_indResult",
+    (
+        "statistic",
+        "pvalue",
+        "dof",
+        "mean1",
+        "mean2",
+        "var1",
+        "var2",
+        "tail",
+        "cohen_d",
+    ),
+)
 
-Ttest_relResult = namedtuple('Ttest_relResult',
-                             ('statistic', 'pvalue', 'dof',
-                              'mean', 'var', 'tail',
-                              'cohen_d'))
+Ttest_relResult = namedtuple(
+    "Ttest_relResult",
+    (
+        "statistic",
+        "pvalue",
+        "dof",
+        "mean",
+        "var",
+        "tail",
+        "cohen_d",
+    ),
+)
 
-WilcoxonResult = namedtuple('WilcoxonResult',
-                            ('statistic', 'pvalue',
-                             'z', 'tail',
-                             'cohen_d'))
+WilcoxonResult = namedtuple(
+    "WilcoxonResult",
+    (
+        "statistic",
+        "pvalue",
+        "z",
+        "tail",
+        "cohen_d",
+    ),
+)
+
 
 def ttest_rel(x, y, equal_var=True, two_tailed=True, m0=0):
 
     if len(x) != len(y):
-        raise ValueError('unequal length arrays')
+        raise ValueError("unequal length arrays")
 
     n = float(len(x))
     diff = x - y
@@ -48,10 +72,10 @@ def ttest_rel(x, y, equal_var=True, two_tailed=True, m0=0):
 
     if two_tailed:
         p *= 2.0
-        tail = 'two-tailed'
+        tail = "two-tailed"
 
     else:
-        tail = 'one-tailed'
+        tail = "one-tailed"
 
     if equal_var:
         std_pooled = np.sqrt(0.5 * (np.var(x, ddof=1) + np.var(y, ddof=1)))
@@ -61,12 +85,13 @@ def ttest_rel(x, y, equal_var=True, two_tailed=True, m0=0):
 
     return Ttest_relResult(t, p, dof, mean, std ** 2, tail, cohen_d)
 
+
 def ttest_ind_from_stats(x, m2, two_tailed=True):
 
     m1 = np.mean(x)
     v1 = np.var(x, ddof=1)
     n1 = float(len(x))
-    
+
     dof = n1 - 1
     t = np.sqrt(n1) * (m1 - m2) / v1
 
@@ -76,12 +101,12 @@ def ttest_ind_from_stats(x, m2, two_tailed=True):
 
     if two_tailed:
         p *= 2.0
-        tail = 'two-tailed'
+        tail = "two-tailed"
     else:
-        tail = 'one-tailed'
+        tail = "one-tailed"
 
     return Ttest_indResult(t, p, dof, m1, m2, v1, v1, tail, cohen_d)
-    
+
 
 def _ttest_ind_from_stats(m1, m2, v1, v2, sp, norm, dof, two_tailed):
 
@@ -97,9 +122,9 @@ def _ttest_ind_from_stats(m1, m2, v1, v2, sp, norm, dof, two_tailed):
     # Compute one-tailed or two tailed test
     if two_tailed:
         p *= 2.0
-        tail = 'two-tailed'
+        tail = "two-tailed"
     else:
-        tail = 'one-tailed'
+        tail = "one-tailed"
     return Ttest_indResult(t, p, dof, m1, m2, v1, v2, tail, cohen_d)
 
 
@@ -123,7 +148,7 @@ def _ttest_unequal_size_unequal_var(m1, m2, v1, v2, n1, n2, two_tailed):
     norm = 1.0
 
     # degrees of freedom (Welch-Satterthwaite equation)
-    dof = ((v1n + v2n) ** 2 / ((v1n ** 2) / (n1 - 1) + (v2n ** 2) / (n2 - 1)))
+    dof = (v1n + v2n) ** 2 / ((v1n ** 2) / (n1 - 1) + (v2n ** 2) / (n2 - 1))
 
     return _ttest_ind_from_stats(m1, m2, v1, v2, sp, norm, dof, two_tailed)
 
@@ -145,8 +170,14 @@ def ttest_ind(x, y, equal_var=True, two_tailed=True):
         return _ttest_unequal_size_unequal_var(m1, m2, v1, v2, n1, n2, two_tailed)
 
 
-def wilcoxon(x, y, zero_method="wilcox", correction=False,
-             alternative="two-sided", mode='auto'):
+def wilcoxon(
+    x,
+    y,
+    zero_method="wilcox",
+    correction=False,
+    alternative="two-sided",
+    mode="auto",
+):
     """
     Calculate the Wilcoxon signed-rank test, a non-parametric version of the
     paired T-test.
@@ -159,23 +190,25 @@ def wilcoxon(x, y, zero_method="wilcox", correction=False,
         raise ValueError("mode must be either 'auto', 'approx' or 'exact'")
 
     if zero_method not in ["wilcox", "pratt", "zsplit"]:
-        raise ValueError("Zero method must be either 'wilcox' "
-                         "or 'pratt' or 'zsplit'")
+        raise ValueError(
+            "Zero method must be either 'wilcox' " "or 'pratt' or 'zsplit'"
+        )
 
     if alternative not in ["two-sided", "less", "greater"]:
-        raise ValueError("Alternative must be either 'two-sided', "
-                         "'greater' or 'less'")
+        raise ValueError(
+            "Alternative must be either 'two-sided', " "'greater' or 'less'"
+        )
 
     if y is None:
         d = np.asarray(x)
         if d.ndim > 1:
-            raise ValueError('Sample x must be one-dimensional.')
+            raise ValueError("Sample x must be one-dimensional.")
     else:
         x, y = map(np.asarray, (x, y))
         if x.ndim > 1 or y.ndim > 1:
-            raise ValueError('Samples x and y must be one-dimensional.')
+            raise ValueError("Samples x and y must be one-dimensional.")
         if len(x) != len(y):
-            raise ValueError('The samples x and y must have the same length.')
+            raise ValueError("The samples x and y must have the same length.")
         d = x - y
 
     if mode == "auto":
@@ -187,14 +220,18 @@ def wilcoxon(x, y, zero_method="wilcox", correction=False,
     n_zero = np.sum(d == 0)
     if n_zero > 0 and mode == "exact":
         mode = "approx"
-        warnings.warn("Exact p-value calculation does not work if there are "
-                      "ties. Switching to normal approximation.")
+        warnings.warn(
+            "Exact p-value calculation does not work if there are "
+            "ties. Switching to normal approximation."
+        )
 
     if mode == "approx":
         if zero_method in ["wilcox", "pratt"]:
             if n_zero == len(d):
-                raise ValueError("zero_method 'wilcox' and 'pratt' do not "
-                                 "work if x - y is zero for all elements.")
+                raise ValueError(
+                    "zero_method 'wilcox' and 'pratt' do not "
+                    "work if x - y is zero for all elements."
+                )
         if zero_method == "wilcox":
             # Keep all non-zero differences
             d = np.compress(np.not_equal(d, 0), d)
@@ -209,8 +246,8 @@ def wilcoxon(x, y, zero_method="wilcox", correction=False,
 
     if zero_method == "zsplit":
         r_zero = np.sum((d == 0) * r)
-        r_plus += r_zero / 2.
-        r_minus += r_zero / 2.
+        r_plus += r_zero / 2.0
+        r_minus += r_zero / 2.0
 
     # return min for two-sided test, but r_plus for one-sided test
     # the literature is not consistent here
@@ -225,14 +262,14 @@ def wilcoxon(x, y, zero_method="wilcox", correction=False,
         T = r_plus
 
     if mode == "approx":
-        mn = count * (count + 1.) * 0.25
-        se = count * (count + 1.) * (2. * count + 1.)
+        mn = count * (count + 1.0) * 0.25
+        se = count * (count + 1.0) * (2.0 * count + 1.0)
 
         if zero_method == "pratt":
             r = r[d != 0]
             # normal approximation needs to be adjusted, see Cureton (1967)
-            mn -= n_zero * (n_zero + 1.) * 0.25
-            se -= n_zero * (n_zero + 1.) * (2. * n_zero + 1.)
+            mn -= n_zero * (n_zero + 1.0) * 0.25
+            se -= n_zero * (n_zero + 1.0) * (2.0 * n_zero + 1.0)
 
         replist, repnum = find_repeats(r)
         if repnum.size != 0:
@@ -254,7 +291,7 @@ def wilcoxon(x, y, zero_method="wilcox", correction=False,
         # compute statistic and p-value using normal approximation
         z = (T - mn - d) / se
         if alternative == "two-sided":
-            prob = 2. * distributions.norm.sf(abs(z))
+            prob = 2.0 * distributions.norm.sf(abs(z))
         elif alternative == "greater":
             # large T = r_plus indicates x is greater than y; i.e.
             # accept alternative in that case and return small p-value (sf)
@@ -271,86 +308,86 @@ def wilcoxon(x, y, zero_method="wilcox", correction=False,
                 # r_plus is the center of the distribution.
                 prob = 1.0
             else:
-                p_less = np.sum(cnt[:r_plus + 1]) / 2**count
-                p_greater = np.sum(cnt[r_plus:]) / 2**count
-                prob = 2*min(p_greater, p_less)
+                p_less = np.sum(cnt[: r_plus + 1]) / 2 ** count
+                p_greater = np.sum(cnt[r_plus:]) / 2 ** count
+                prob = 2 * min(p_greater, p_less)
         elif alternative == "greater":
-            prob = np.sum(cnt[r_plus:]) / 2**count
+            prob = np.sum(cnt[r_plus:]) / 2 ** count
         else:
-            prob = np.sum(cnt[:r_plus + 1]) / 2**count
+            prob = np.sum(cnt[: r_plus + 1]) / 2 ** count
 
     n = len(x)
     std_pooled = np.sqrt((np.var(x, ddof=1) + np.var(y, ddof=1)) / n)
     cohen_d = abs((np.mean(x) - np.mean(y)) / std_pooled)
 
-    if alternative == 'two_tailed':
-        tail = 'two-tailed'
+    if alternative == "two_tailed":
+        tail = "two-tailed"
     else:
-        tail = 'one-tailed'
-    return WilcoxonResult(statistic=T,
-                          z=z,
-                          pvalue=prob,
-                          tail=tail,
-                          cohen_d=cohen_d)
+        tail = "one-tailed"
+    return WilcoxonResult(
+        statistic=T,
+        z=z,
+        pvalue=prob,
+        tail=tail,
+        cohen_d=cohen_d,
+    )
 
-    
 
-def pretty_print_results(results, cond1_name='A', cond2_name='B', alpha=0.01):
+def pretty_print_results(results, cond1_name="A", cond2_name="B", alpha=0.01):
 
     # Check for significance
     if results.pvalue < alpha:
-        sig = 'a significant'
+        sig = "a significant"
     else:
-        sig = 'no significant'
+        sig = "no significant"
 
-    sig += ' difference at the $\\alpha = {0:.2f}$ level'.format(alpha)
+    sig += " difference at the $\\alpha = {0:.2f}$ level".format(alpha)
 
     if results.dof.is_integer():
-        dof_s = '{0}'.format(int(results.dof))
+        dof_s = "{0}".format(int(results.dof))
     else:
-        dof_s = '{0:.2f}'.format(results.dof)
+        dof_s = "{0:.2f}".format(results.dof)
 
     if results.pvalue >= 0.01:
-        pval_string = f'{results.pvalue:.2f}'
+        pval_string = f"{results.pvalue:.2f}"
     elif results.pvalue >= 0.001:
-        pval_string = f'{results.pvalue:.3f}'
+        pval_string = f"{results.pvalue:.3f}"
     else:
-        pval_string = '<0.001'
+        pval_string = "<0.001"
     t_res = "$\\text{{t}}({0})={1:.2f}, p={2}, \\text{{Cohen's}}\\ d={3:.2f}$".format(
-        dof_s, results.statistic, pval_string, results.cohen_d)
+        dof_s, results.statistic, pval_string, results.cohen_d
+    )
 
     if isinstance(results, Ttest_indResult):
-        t_type = 'An independent-samples'
+        t_type = "An independent-samples"
 
-        g1_stats = '{2} $(\\text{{mean}}={0:.2f}, \\text{{std}}={1:.2f})$'.format(
-            results.mean1,
-            np.sqrt(results.var1),
-            cond1_name)
+        g1_stats = "{2} $(\\text{{mean}}={0:.2f}, \\text{{std}}={1:.2f})$".format(
+            results.mean1, np.sqrt(results.var1), cond1_name
+        )
 
-        g2_stats = '{2} $(\\text{{mean}}={0:.2f}, \\text{{std}}={1:.2f})$'.format(
-            results.mean2,
-            np.sqrt(results.var2),
-            cond2_name)
+        g2_stats = "{2} $(\\text{{mean}}={0:.2f}, \\text{{std}}={1:.2f})$".format(
+            results.mean2, np.sqrt(results.var2), cond2_name
+        )
 
-        g_stats = 'for ' + g1_stats + ' and ' + g2_stats
+        g_stats = "for " + g1_stats + " and " + g2_stats
 
     elif isinstance(results, Ttest_relResult):
-        t_type = 'A paired samples'
+        t_type = "A paired samples"
 
-        g_stats = '$(\\text{{mean}}={0:.2f}, \\text{{std}}={1:.2f})$'.format(
-            results.mean,
-            np.sqrt(results.var))
+        g_stats = "$(\\text{{mean}}={0:.2f}, \\text{{std}}={1:.2f})$".format(
+            results.mean, np.sqrt(results.var)
+        )
 
-    out_str = ('{0} {1} t-test was conducted to compare {2} and {3}. '
-               'There was {4} in the scores {5}; {6}').format(
-                   t_type, results.tail, cond1_name, cond2_name,
-                   sig, g_stats, t_res)
+    out_str = (
+        "{0} {1} t-test was conducted to compare {2} and {3}. "
+        "There was {4} in the scores {5}; {6}"
+    ).format(t_type, results.tail, cond1_name, cond2_name, sig, g_stats, t_res)
 
     print(out_str)
     return out_str, t_res, g_stats
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # Compare to scipy.stats example
     rvs1 = stats.norm.rvs(loc=5, scale=10, size=500)
